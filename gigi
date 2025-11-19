@@ -1,0 +1,857 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAR-T 细胞疗法 | CAR-T Cell Therapy</title>
+    <style>
+        :root {
+            --bg-color: #F0F4F8; /* 淡雅的背景色 */
+            --primary-text: #1F2937; /* 主要文字颜色 */
+            --secondary-text: #4B5563; /* 次要文字颜色 */
+            --blood-red: #E57373; /* 红细胞颜色 */
+            --t-cell-color: #64B5F6; /* T细胞颜色 */
+            --cancer-cell-color: #BA68C8; /* 癌细胞颜色 */
+            --cancer-antigen-color: #9575CD; /* 癌细胞抗原颜色 */
+            --vector-color: #81C784; /* 病毒载体颜色 */
+            --gene-color: #FFD54F; /* 基因片段颜色 */
+            --car-t-color: #4DD0E1; /* CAR-T细胞颜色 */
+            --car-receptor-color: #FFB74D; /* CAR受体颜色 */
+            --effect-glow: #FFF9C4; /* 效果辉光 */
+            --ui-accent: #4FC3F7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #animation-container {
+            width: 100vw;
+            height: 56.25vw; /* 16:9 Aspect Ratio */
+            max-height: 100vh;
+            max-width: 177.78vh; /* 16:9 Aspect Ratio */
+            position: relative;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            visibility: hidden;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* 字幕样式 */
+        #subtitles-container {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            text-align: center;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+        }
+
+        .subtitle {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            position: absolute;
+            width: 100%;
+            left: 0;
+        }
+
+        .subtitle.active {
+            opacity: 1;
+            position: relative;
+        }
+
+        #subtitle-zh {
+            font-size: 2.2vh;
+            color: var(--primary-text);
+            font-weight: 500;
+            margin-bottom: 0.5vh;
+        }
+
+        #subtitle-en {
+            font-size: 1.8vh;
+            color: var(--secondary-text);
+            font-weight: 400;
+        }
+
+        /* 通用细胞样式 */
+        .cell {
+            position: absolute;
+            border-radius: 50%;
+            transform-origin: center;
+        }
+
+        /* --- 场景 1: The Problem --- */
+        #scene1-patient {
+            position: absolute;
+            width: 30%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            opacity: 0.2;
+        }
+
+        #scene1-zoom-area {
+            position: absolute;
+            top: 35%;
+            left: 20%;
+            width: 15%;
+            height: 15%;
+            border: 3px solid var(--ui-accent);
+            border-radius: 50%;
+            opacity: 0;
+        }
+        
+        #scene1-bloodstream {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(229,115,115,0.1), rgba(229,115,115,0.3));
+            opacity: 0;
+        }
+
+        .rbc { /* Red Blood Cell */
+            background: var(--blood-red);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .t-cell {
+            background: var(--t-cell-color);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .cancer-cell {
+            background: var(--cancer-cell-color);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+        }
+        
+        .cancer-cell-antigen {
+            position: absolute;
+            width: 20%;
+            height: 20%;
+            background: var(--cancer-antigen-color);
+            border-radius: 50% 50% 0 0;
+            transform-origin: bottom center;
+        }
+
+        /* --- 场景 2: Collection --- */
+        #scene2-arm {
+            position: absolute;
+            width: 60%;
+            height: auto;
+            left: -10%;
+            top: 30%;
+            opacity: 0;
+        }
+
+        #scene2-tube-path {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+
+        #blood-flow {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+        
+        #scene2-machine {
+            position: absolute;
+            width: 25%;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+        }
+
+        /* --- 场景 3: Engineering --- */
+        .lab-bg {
+            background: #E3F2FD;
+        }
+        
+        #t-cell-isolated {
+            position: absolute;
+            width: 15vh; height: 15vh;
+            top: 50%; left: 25%;
+            transform: translate(-50%, -50%);
+        }
+
+        #viral-vector {
+            position: absolute;
+            width: 8vh; height: 8vh;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+        }
+
+        #gene-payload {
+            position: absolute;
+            width: 10vh; height: auto;
+            opacity: 0;
+        }
+
+        #t-cell-nucleus {
+            position: absolute;
+            width: 40%; height: 40%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(100, 181, 246, 0.5);
+            border-radius: 50%;
+        }
+
+        /* --- 场景 4: Transformation & Expansion --- */
+        #car-t-cell-single {
+            position: absolute;
+            width: 20vh; height: 20vh;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+        }
+
+        .car-receptor {
+            position: absolute;
+            width: 15%;
+            height: 25%;
+            background: var(--car-receptor-color);
+            transform-origin: bottom center;
+            clip-path: polygon(20% 0, 80% 0, 100% 40%, 100% 100%, 0 100%, 0 40%);
+        }
+
+        #expansion-container {
+            position: absolute;
+            width: 100%; height: 100%;
+            opacity: 0;
+        }
+
+        .car-t-expanded {
+            position: absolute;
+            background: var(--car-t-color);
+            border-radius: 50%;
+        }
+
+        /* --- 场景 5: Infusion --- */
+        #scene5-patient {
+            position: absolute;
+            width: 40%;
+            height: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+        }
+
+        #iv-bag {
+            position: absolute;
+            width: 12%;
+            top: 5%;
+            left: 44%;
+            opacity: 0;
+        }
+        
+        #iv-tube-path {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+
+        #car-t-flow {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+        
+        /* --- 场景 6: The Battle --- */
+        .car-t-battle {
+            position: absolute;
+            width: 8vh; height: 8vh;
+            background: var(--car-t-color);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--car-t-color);
+        }
+
+        .cancer-cell-battle {
+             position: absolute;
+            width: 12vh; height: 12vh;
+        }
+
+        .destruction-effect {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            transform: scale(0);
+            background: radial-gradient(circle, var(--effect-glow), transparent 70%);
+        }
+
+        /* --- 场景 7: Victory --- */
+        #scene7-patient {
+            position: absolute;
+            width: 40%;
+            height: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+        }
+
+        .final-title {
+            position: absolute;
+            width: 100%;
+            top: 35%;
+            text-align: center;
+            opacity: 0;
+        }
+
+        .final-title h1 {
+            font-size: 6vh;
+            color: var(--primary-text);
+            font-weight: 600;
+        }
+        
+        .final-title p {
+            font-size: 3vh;
+            color: var(--secondary-text);
+            margin-top: 1vh;
+        }
+
+        /* 动画关键帧 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            25% { transform: translateY(-10px) translateX(5px) rotate(5deg); }
+            50% { transform: translateY(0px) translateX(-5px) rotate(0deg); }
+            75% { transform: translateY(10px) translateX(5px) rotate(-5deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 15px var(--cancer-cell-color); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px var(--cancer-cell-color); }
+            100% { transform: scale(1); box-shadow: 0 0 15px var(--cancer-cell-color); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 10px var(--car-t-color); }
+            50% { box-shadow: 0 0 20px var(--car-t-color), 0 0 30px var(--effect-glow); }
+            100% { box-shadow: 0 0 10px var(--car-t-color); }
+        }
+
+        @keyframes t-cell-attack-fail {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-100px, 20px); }
+            60% { transform: translate(-110px, 25px); } /* contact */
+            100% { transform: translate(50px, -50px); } /* bounce off */
+        }
+        
+        @keyframes vector-inject {
+            0% { transform: translate(-50%, -50%) scale(1); left: 50%; }
+            50% { transform: translate(-50%, -50%) scale(1); left: 33%; }
+            100% { transform: translate(-50%, -50%) scale(0.5); left: 33%; opacity: 0;}
+        }
+
+        @keyframes gene-fly {
+            0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+            10% { opacity: 1; transform: translate(0, 0) scale(0.5); }
+            100% { opacity: 0; transform: translate(-15vh, 0) scale(0.2); }
+        }
+        
+        @keyframes nucleus-absorb {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); background: var(--gene-color); }
+            100% { transform: translate(-50%, -50%) scale(1); background: rgba(100, 181, 246, 0.5); }
+        }
+
+        @keyframes car-receptor-grow {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+
+        @keyframes patient-glow {
+            from { filter: drop-shadow(0 0 0px var(--ui-accent)); }
+            to { filter: drop-shadow(0 0 20px var(--ui-accent)); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="animation-container">
+        <!-- 字幕 -->
+        <div id="subtitles-container">
+            <div id="subtitle-zh" class="subtitle"></div>
+            <div id="subtitle-en" class="subtitle"></div>
+        </div>
+
+        <!-- 场景1: 难题 - 免疫系统无法识别癌细胞 -->
+        <div id="scene1" class="scene">
+            <svg id="scene1-patient" viewBox="0 0 100 200">
+                <path d="M50,10 C25,10 10,30 10,50 C10,70 25,90 50,110 C75,90 90,70 90,50 C90,30 75,10 50,10 Z M50,115 C20,115 5,140 5,170 L95,170 C95,140 80,115 50,115 Z" fill="#CFD8DC"/>
+            </svg>
+            <div id="scene1-zoom-area"></div>
+            <div id="scene1-bloodstream">
+                <!-- Red Blood Cells -->
+                <div class="cell rbc" style="width: 5vh; height: 5vh; top: 10%; left: 15%; animation: float 15s infinite ease-in-out;"></div>
+                <div class="cell rbc" style="width: 6vh; height: 6vh; top: 70%; left: 10%; animation: float 18s infinite ease-in-out;"></div>
+                <div class="cell rbc" style="width: 4vh; height: 4vh; top: 40%; left: 80%; animation: float 12s infinite ease-in-out;"></div>
+                <div class="cell rbc" style="width: 5.5vh; height: 5.5vh; top: 85%; left: 60%; animation: float 16s infinite ease-in-out;"></div>
+                <div class="cell rbc" style="width: 5vh; height: 5vh; top: 20%; left: 55%; animation: float 14s infinite ease-in-out;"></div>
+                <!-- Cancer Cell -->
+                <div id="s1-cancer-cell" class="cell cancer-cell" style="width: 14vh; height: 14vh; top: 40%; left: 43%; animation: pulse 4s infinite ease-in-out;">
+                     <!-- Antigens -->
+                    <div class="cancer-cell-antigen" style="transform: rotate(0deg) translateX(4.2vh) rotate(0deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(45deg) translateX(4.2vh) rotate(-45deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(90deg) translateX(4.2vh) rotate(-90deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(135deg) translateX(4.2vh) rotate(-135deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(180deg) translateX(4.2vh) rotate(-180deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(225deg) translateX(4.2vh) rotate(-225deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(270deg) translateX(4.2vh) rotate(-270deg); height: 25%;"></div>
+                    <div class="cancer-cell-antigen" style="transform: rotate(315deg) translateX(4.2vh) rotate(-315deg); height: 25%;"></div>
+                </div>
+                <!-- T-Cell -->
+                <div id="s1-t-cell" class="cell t-cell" style="width: 8vh; height: 8vh; top: 45%; left: 75%;"></div>
+            </div>
+        </div>
+
+        <!-- 场景2: 采集 - 分离T细胞 -->
+        <div id="scene2" class="scene">
+            <svg id="scene2-arm" viewBox="0 0 300 150">
+                <path d="M 10 70 Q 50 80, 150 75 T 280 60" fill="none" stroke="#E0E0E0" stroke-width="30" stroke-linecap="round"/>
+                <path d="M 120 75 L 110 85" fill="none" stroke="#BDBDBD" stroke-width="2" />
+                <path d="M 130 75 L 120 85" fill="none" stroke="#BDBDBD" stroke-width="2" />
+            </svg>
+            <svg id="scene2-tube-path" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet">
+                <path id="blood-draw-path" d="M 600 550 C 900 550, 1100 550, 1400 540" fill="none" stroke-width="15" stroke-linecap="round"/>
+                <path id="blood-flow" d="M 600 550 C 900 550, 1100 550, 1400 540" fill="none" stroke="var(--blood-red)" stroke-width="10" stroke-linecap="round"/>
+            </svg>
+            <svg id="scene2-machine" viewBox="0 0 100 100">
+                <rect x="5" y="5" width="90" height="90" rx="10" fill="#CFD8DC"/>
+                <rect x="15" y="15" width="70" height="50" fill="#F0F4F8"/>
+                <circle cx="50" cy="40" r="15" fill="#B0BEC5"/>
+                <rect x="20" y="75" width="60" height="10" rx="5" fill="#90A4AE"/>
+            </svg>
+        </div>
+        
+        <!-- 场景3: 改造 - 基因工程 -->
+        <div id="scene3" class="scene lab-bg">
+            <div id="t-cell-isolated" class="cell t-cell">
+                <div id="t-cell-nucleus"></div>
+            </div>
+            <svg id="viral-vector" viewBox="0 0 100 100">
+                <defs>
+                    <filter id="glow-vector">
+                        <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <path d="M50 0 L100 25 L100 75 L50 100 L0 75 L0 25 Z" fill="rgba(129, 199, 132, 0.7)" filter="url(#glow-vector)"/>
+                <path d="M0 25 L50 50 L0 75 M100 25 L50 50 L100 75 M50 0 L50 50 L50 100" stroke="var(--vector-color)" stroke-width="3"/>
+            </svg>
+             <svg id="gene-payload" viewBox="0 0 50 100" style="position:absolute; top:48%; left:48%;">
+                <path d="M10,0 C40,20 10,40 40,60 C10,80 40,100 10,100" stroke="var(--gene-color)" fill="none" stroke-width="4" stroke-linecap="round"/>
+                <path d="M40,0 C10,20 40,40 10,60 C40,80 10,100 40,100" stroke="var(--gene-color)" fill="none" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- 场景4: 扩增 - 制造CAR-T军团 -->
+        <div id="scene4" class="scene lab-bg">
+            <div id="car-t-cell-single">
+                <div class="cell" style="width:100%; height:100%; background: var(--car-t-color); animation: glow 3s infinite ease-in-out;"></div>
+                <!-- CAR Receptors -->
+            </div>
+            <div id="expansion-container"></div>
+        </div>
+        
+        <!-- 场景5: 回输 - 注入患者体内 -->
+        <div id="scene5" class="scene">
+            <svg id="scene5-patient" viewBox="0 0 100 200">
+                 <path d="M50,10 C25,10 10,30 10,50 C10,70 25,90 50,110 C75,90 90,70 90,50 C90,30 75,10 50,10 Z M50,115 C20,115 5,140 5,170 L95,170 C95,140 80,115 50,115 Z" fill="#CFD8DC"/>
+            </svg>
+            <svg id="iv-bag" viewBox="0 0 100 150">
+                <path d="M10,0 L90,0 Q100,10 100,20 L100,120 Q100,140 80,140 L20,140 Q0,140 0,120 L0,20 Q0,10 10,0 Z" fill="rgba(77, 208, 225, 0.2)"/>
+                <path d="M10,0 L90,0 Q100,10 100,20 L100,120 Q100,140 80,140 L20,140 Q0,140 0,120 L0,20 Q0,10 10,0 Z" fill="none" stroke="var(--car-t-color)" stroke-width="2"/>
+                <rect x="45" y="140" width="10" height="10" fill="var(--car-t-color)"/>
+            </svg>
+            <svg id="iv-tube-path" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet">
+                <path d="M 960 270 C 960 400, 800 450, 750 600" fill="none" stroke-width="15" stroke-linecap="round" stroke="#B2EBF2"/>
+                <path id="car-t-flow" d="M 960 270 C 960 400, 800 450, 750 600" fill="none" stroke="var(--car-t-color)" stroke-width="10" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- 场景6: 战斗 - 精准猎杀 -->
+        <div id="scene6" class="scene">
+            <div id="s6-bg" style="position:absolute; width:100%; height:100%; background: radial-gradient(circle, rgba(229,115,115,0.1), rgba(229,115,115,0.3));">
+                <!-- Battle elements will be added by JS -->
+            </div>
+        </div>
+
+        <!-- 场景7: 胜利 - 新生 -->
+        <div id="scene7" class="scene">
+             <div id="s7-bloodstream" style="position:absolute; width:100%; height:100%; background: radial-gradient(circle, rgba(100, 181, 246, 0.1), rgba(100, 181, 246, 0.2));">
+                 <!-- Healthy cells and patrolling CAR-T cells -->
+             </div>
+             <svg id="scene7-patient" viewBox="0 0 100 200">
+                 <path d="M50,10 C25,10 10,30 10,50 C10,70 25,90 50,110 C75,90 90,70 90,50 C90,30 75,10 50,10 Z M50,115 C20,115 5,140 5,170 L95,170 C95,140 80,115 50,115 Z" fill="var(--ui-accent)"/>
+            </svg>
+            <div class="final-title">
+                <h1>CAR-T: 细胞与基因的奇迹</h1>
+                <p>A New Era of Living Medicine</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const scenes = document.querySelectorAll('.scene');
+        const subtitleZh = document.getElementById('subtitle-zh');
+        const subtitleEn = document.getElementById('subtitle-en');
+
+        let currentScene = 0;
+
+        const timeline = [
+            // SCENE 1: The Problem
+            { scene: 0, duration: 3000, zh: "在我们的身体里，有一支强大的军队——免疫系统。", en: "Inside our body, there is a powerful army - the immune system." },
+            { scene: 0, duration: 4000, zh: "其中的T细胞，是负责清除病变细胞的英勇士兵。", en: "Among them, T-cells are valiant soldiers responsible for eliminating diseased cells." },
+            { scene: 0, duration: 4000, zh: "但有时，狡猾的癌细胞会伪装自己，让T细胞无法识别。", en: "But sometimes, cunning cancer cells disguise themselves, evading recognition by T-cells.", action: 's1_zoomIn' },
+            { scene: 0, duration: 4000, zh: "T细胞一次次尝试攻击，却都无功而返。", en: "The T-cells try to attack again and again, but to no avail.", action: 's1_attackFail' },
+            
+            // SCENE 2: Collection
+            { scene: 1, duration: 4000, zh: "故事的转机，从一次血液采集开始。", en: "The turning point of the story begins with a blood collection.", action: 's2_collectBlood' },
+            { scene: 1, duration: 4000, zh: "通过白细胞分离术，医生从患者血液中分离出T细胞。", en: "Through leukapheresis, doctors separate T-cells from the patient's blood." },
+            
+            // SCENE 3: Engineering
+            { scene: 2, duration: 4000, zh: "在尖端实验室内，T细胞将接受一次“超级改造”。", en: "In a state-of-the-art laboratory, the T-cells will undergo a 'super-upgrade'.", action: 's3_isolate' },
+            { scene: 2, duration: 5000, zh: "科学家使用一种无害的病毒作为“信使”...", en: "Scientists use a harmless virus as a 'messenger'...", action: 's3_introduceVector' },
+            { scene: 2, duration: 5000, zh: "将一段精心设计的基因，递送给T细胞。", en: "...to deliver a specially designed gene into the T-cell.", action: 's3_injectGene' },
+            { scene: 2, duration: 3000, zh: "T细胞获得了一套全新的“导航和攻击系统”。", en: "The T-cell has now acquired a brand new 'navigation and attack system'." },
+            
+            // SCENE 4: Transformation & Expansion
+            { scene: 3, duration: 5000, zh: "这个新基因，让T细胞表面长出一种特殊的“雷达”——CAR。", en: "This new gene instructs the T-cell to grow a special 'radar' on its surface - the CAR.", action: 's4_growReceptors' },
+            { scene: 3, duration: 4000, zh: "它能精准识别癌细胞表面的特定标记。", en: "It can accurately identify specific markers on the surface of cancer cells." },
+            { scene: 3, duration: 5000, zh: "随后，这些改造后的CAR-T细胞被大量培养、扩增...", en: "Next, these engineered CAR-T cells are cultivated and expanded in large numbers...", action: 's4_expand' },
+            { scene: 3, duration: 3000, zh: "从单个士兵，变成一支装备精良的“超级军团”。", en: "transforming from a single soldier into a well-equipped 'super army'." },
+
+            // SCENE 5: Infusion
+            { scene: 4, duration: 5000, zh: "这支强大的CAR-T细胞军团，被回输到患者体内。", en: "This powerful army of CAR-T cells is then infused back into the patient.", action: 's5_infuse' },
+            { scene: 4, duration: 3000, zh: "它们即将开始一场决定命运的战斗。", en: "They are about to begin a fateful battle." },
+
+            // SCENE 6: The Battle
+            { scene: 5, duration: 5000, zh: "回到体内，CAR-T细胞开始了它们的使命：搜寻并摧毁癌细胞。", en: "Once back in the body, the CAR-T cells begin their mission: to seek and destroy cancer cells.", action: 's6_startBattle' },
+            { scene: 5, duration: 5000, zh: "CAR“雷达”与癌细胞标记物精准结合，如同钥匙插入锁孔。", en: "The CAR 'radar' binds precisely to the cancer cell marker, like a key fitting into a lock.", action: 's6_lockOn' },
+            { scene: 5, duration: 5000, zh: "一旦锁定，CAR-T细胞便会激活，释放强大武器，彻底摧毁癌细胞。", en: "Once locked on, the CAR-T cell activates, releasing powerful weapons to completely destroy the cancer cell.", action: 's6_destroy' },
+            { scene: 5, duration: 4000, zh: "癌细胞节节败退，生命之光重燃。", en: "The cancer cells retreat, and the light of life is rekindled." },
+            
+            // SCENE 7: Victory
+            { scene: 6, duration: 5000, zh: "最终，癌细胞被清除，身体恢复了健康。", en: "Finally, the cancer cells are cleared, and the body returns to health.", action: 's7_victory' },
+            { scene: 6, duration: 5000, zh: "CAR-T细胞作为“活的药物”，会长期在体内巡逻，防止复发。", en: "CAR-T cells, as a 'living drug', will patrol the body long-term to prevent relapse.", action: 's7_patrol' },
+            { scene: 6, duration: 6000, zh: "CAR-T疗法，是细胞与基因工程的奇迹，开启了肿瘤治疗的新纪元。", en: "CAR-T therapy, a miracle of cell and genetic engineering, opens a new era in cancer treatment.", action: 's7_finalTitle' },
+        ];
+
+        function playTimeline() {
+            let cumulativeTime = 0;
+            timeline.forEach((step, index) => {
+                setTimeout(() => {
+                    // Switch scene if necessary
+                    const targetSceneIndex = step.scene;
+                    if (currentScene !== targetSceneIndex) {
+                        scenes[currentScene].classList.remove('active');
+                        scenes[targetSceneIndex].classList.add('active');
+                        currentScene = targetSceneIndex;
+                    }
+
+                    // Update subtitles
+                    subtitleZh.textContent = step.zh;
+                    subtitleEn.textContent = step.en;
+                    
+                    // Trigger specific animation actions
+                    if (step.action) {
+                        window[step.action]();
+                    }
+
+                }, cumulativeTime);
+                cumulativeTime += step.duration;
+            });
+        }
+        
+        // --- Animation Action Functions ---
+
+        function s1_zoomIn() {
+            const zoomArea = document.getElementById('scene1-zoom-area');
+            const patient = document.getElementById('scene1-patient');
+            const bloodstream = document.getElementById('scene1-bloodstream');
+            
+            zoomArea.style.transition = 'all 2s ease-in-out';
+            zoomArea.style.opacity = '1';
+            
+            setTimeout(() => {
+                zoomArea.style.transform = 'scale(10)';
+                zoomArea.style.opacity = '0';
+                patient.style.transition = 'opacity 1s';
+                patient.style.opacity = '0';
+                bloodstream.style.transition = 'opacity 2s';
+                bloodstream.style.opacity = '1';
+            }, 1000);
+        }
+
+        function s1_attackFail() {
+            const tcell = document.getElementById('s1-t-cell');
+            tcell.style.animation = 't-cell-attack-fail 3s ease-in-out';
+        }
+
+        function s2_collectBlood() {
+            document.getElementById('scene2-arm').style.cssText = 'transition: opacity 2s; opacity: 1;';
+            document.getElementById('scene2-machine').style.cssText = 'transition: opacity 2s 1s; opacity: 1;';
+            const bloodFlow = document.getElementById('blood-flow');
+            bloodFlow.style.transition = 'stroke-dashoffset 2s ease-out 1s';
+            bloodFlow.style.strokeDashoffset = '0';
+        }
+        
+        function s3_isolate() {
+            // This is handled by the scene transition.
+        }
+
+        function s3_introduceVector() {
+            const vector = document.getElementById('viral-vector');
+            vector.style.opacity = '1';
+            vector.style.animation = 'vector-inject 3s ease-in-out forwards';
+        }
+        
+        function s3_injectGene() {
+            const gene = document.getElementById('gene-payload');
+            const nucleus = document.getElementById('t-cell-nucleus');
+            gene.style.animation = 'gene-fly 2s ease-in forwards 0.5s';
+            setTimeout(() => {
+                nucleus.style.animation = 'nucleus-absorb 1.5s ease-in-out';
+            }, 1500);
+        }
+
+        function s4_growReceptors() {
+            const cell = document.getElementById('car-t-cell-single');
+            cell.style.opacity = '1';
+            for (let i = 0; i < 12; i++) {
+                const receptor = document.createElement('div');
+                receptor.className = 'car-receptor';
+                receptor.style.transform = `rotate(${i * 30}deg) translateY(-8.5vh)`;
+                receptor.style.animation = `car-receptor-grow 1s ease-out ${i * 0.1}s forwards`;
+                cell.appendChild(receptor);
+            }
+        }
+        
+        function s4_expand() {
+            const singleCell = document.getElementById('car-t-cell-single');
+            const container = document.getElementById('expansion-container');
+            
+            singleCell.style.transition = 'all 1s';
+            singleCell.style.transform = 'translate(-50%, -50%) scale(0.2)';
+            singleCell.style.opacity = '0';
+
+            setTimeout(() => {
+                container.style.transition = 'opacity 1s';
+                container.style.opacity = '1';
+                for (let i = 0; i < 50; i++) {
+                    const cell = document.createElement('div');
+                    const size = Math.random() * 4 + 2; // size in vh
+                    cell.className = 'car-t-expanded';
+                    cell.style.width = `${size}vh`;
+                    cell.style.height = `${size}vh`;
+                    cell.style.top = `${Math.random() * 90}%`;
+                    cell.style.left = `${Math.random() * 90}%`;
+                    cell.style.transform = 'scale(0)';
+                    cell.style.transition = `transform ${0.5 + Math.random() * 0.5}s ease-out`;
+                    container.appendChild(cell);
+                    setTimeout(() => cell.style.transform = 'scale(1)', 100 + Math.random() * 500);
+                }
+            }, 1000);
+        }
+
+        function s5_infuse() {
+            document.getElementById('iv-bag').style.cssText = 'transition: opacity 2s, top 2s; opacity: 1; top: 10%;';
+            document.getElementById('scene5-patient').style.cssText = 'transition: opacity 2s; opacity: 0.2;';
+            const carTFlow = document.getElementById('car-t-flow');
+            carTFlow.style.transition = 'stroke-dashoffset 3s ease-in 1s';
+            carTFlow.style.strokeDashoffset = '0';
+        }
+
+        function s6_startBattle() {
+            const container = document.getElementById('s6-bg');
+            container.innerHTML = ''; // Clear previous elements
+            // Create cancer cells
+            for(let i=0; i<3; i++) {
+                const cancer = createCancerCell(`cancer${i}`);
+                cancer.style.top = `${20 + i * 25}%`;
+                cancer.style.left = `${60 + Math.random() * 10}%`;
+                container.appendChild(cancer);
+            }
+            // Create CAR-T cells
+            for(let i=0; i<5; i++) {
+                const cart = createCarTCell(`cart${i}`);
+                cart.style.top = `${10 + i * 18}%`;
+                cart.style.left = `-10%`;
+                container.appendChild(cart);
+                // Animate them moving in
+                setTimeout(() => {
+                     cart.style.transition = `left 4s ease-out ${i*0.2}s`;
+                     cart.style.left = `${10 + Math.random() * 15}%`;
+                }, 500);
+            }
+        }
+        
+        let destroyedCount = 0;
+        function s6_lockOn() {
+            const cart = document.getElementById(`cart${destroyedCount}`);
+            const cancer = document.getElementById(`cancer${destroyedCount}`);
+            if(!cart || !cancer) return;
+            
+            const cancerRect = cancer.getBoundingClientRect();
+            const cartRect = cart.getBoundingClientRect();
+            
+            const targetX = cancerRect.left - cartRect.left + (cancerRect.width / 2) - (cartRect.width) - 5;
+            const targetY = cancerRect.top - cartRect.top;
+
+            cart.style.transition = `transform 1.5s ease-in-out`;
+            cart.style.transform = `translate(${targetX}px, ${targetY}px)`;
+        }
+        
+        function s6_destroy() {
+             const cancer = document.getElementById(`cancer${destroyedCount}`);
+             if(!cancer) return;
+
+             setTimeout(() => {
+                const effect = cancer.querySelector('.destruction-effect');
+                effect.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out 0.3s';
+                effect.style.transform = 'scale(1.5)';
+                effect.style.opacity = '0';
+                
+                cancer.style.transition = 'transform 0.5s, opacity 0.5s';
+                cancer.style.transform = 'scale(0.8)';
+                cancer.style.opacity = '0';
+                destroyedCount++;
+             }, 1500);
+        }
+
+        function s7_victory() {
+            const container = document.getElementById('s7-bloodstream');
+            container.innerHTML = '';
+            // Add healthy red blood cells
+            for(let i=0; i<5; i++) {
+                const rbc = document.createElement('div');
+                rbc.className = 'cell rbc';
+                rbc.style.width = `${Math.random() * 2 + 4}vh`;
+                rbc.style.height = rbc.style.width;
+                rbc.style.top = `${Math.random() * 90}%`;
+                rbc.style.left = `${Math.random() * 90}%`;
+                rbc.style.animation = 'float 15s infinite ease-in-out';
+                container.appendChild(rbc);
+            }
+        }
+
+        function s7_patrol() {
+             const container = document.getElementById('s7-bloodstream');
+             // Add patrolling CAR-T cells
+             for(let i=0; i<2; i++) {
+                const cart = createCarTCell(`patrol${i}`);
+                cart.style.animation = 'glow 3s infinite ease-in-out, float 20s infinite ease-in-out';
+                cart.style.width = '7vh';
+                cart.style.height = '7vh';
+                cart.style.top = `${20 + i * 50}%`;
+                cart.style.left = `${20 + i * 50}%`;
+                container.appendChild(cart);
+             }
+        }
+
+        function s7_finalTitle() {
+            const bloodstream = document.getElementById('s7-bloodstream');
+            const patient = document.getElementById('scene7-patient');
+            const title = document.querySelector('.final-title');
+
+            bloodstream.style.transition = 'opacity 2s, transform 2s';
+            bloodstream.style.opacity = '0';
+            bloodstream.style.transform = 'scale(0.1)';
+
+            setTimeout(() => {
+                patient.style.transition = 'opacity 2s, filter 2s';
+                patient.style.opacity = '1';
+                patient.style.animation = 'patient-glow 2s alternate infinite ease-in-out';
+            }, 1000);
+            
+            setTimeout(() => {
+                title.style.transition = 'opacity 2s';
+                title.style.opacity = '1';
+            }, 2000);
+        }
+
+        // --- Helper Functions to create elements ---
+        function createCancerCell(id) {
+            const cancer = document.createElement('div');
+            cancer.id = id;
+            cancer.className = 'cell cancer-cell-battle';
+            cancer.style.animation = 'pulse 4s infinite ease-in-out';
+            let antigensHtml = '';
+            for(let i=0; i<8; i++) {
+                antigensHtml += `<div class="cancer-cell-antigen" style="background: var(--cancer-antigen-color); transform: rotate(${i*45}deg) translateX(3.6vh) rotate(-${i*45}deg); height: 25%;"></div>`;
+            }
+            cancer.innerHTML = antigensHtml + '<div class="destruction-effect"></div>';
+            return cancer;
+        }
+
+        function createCarTCell(id) {
+            const cart = document.createElement('div');
+            cart.id = id;
+            cart.className = 'car-t-battle';
+            let receptorsHtml = '';
+            for(let i=0; i<8; i++) {
+                 receptorsHtml += `<div class="car-receptor" style="transform: rotate(${i*45}deg) translateY(-2.8vh);"></div>`;
+            }
+            cart.innerHTML = receptorsHtml;
+            return cart;
+        }
+        
+        // --- Initial Setup ---
+        window.onload = () => {
+            // Pre-warm the first scene
+            scenes[0].classList.add('active');
+            subtitleZh.classList.add('active');
+            subtitleEn.classList.add('active');
+            
+            // Set initial subtitle text
+            subtitleZh.textContent = timeline[0].zh;
+            subtitleEn.textContent = timeline[0].en;
+
+            // Start the animation timeline after a brief moment
+            setTimeout(playTimeline, 1000);
+        };
+
+    </script>
+</body>
+</html>
